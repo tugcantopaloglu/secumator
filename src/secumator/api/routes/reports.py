@@ -14,7 +14,14 @@ from secumator.reports.sarif import export_sarif
 
 router = APIRouter()
 logger = get_logger("api.reports")
-generator = ReportGenerator()
+
+_generator: ReportGenerator | None = None
+
+def get_report_generator() -> ReportGenerator:
+    global _generator
+    if _generator is None:
+        _generator = ReportGenerator()
+    return _generator
 
 
 @router.post("/reports", response_model=ReportResponse)
@@ -36,7 +43,7 @@ async def generate_report(
     logger.info("generating_report", scan_id=scan.id, format=request.format)
 
     try:
-        report_path = await generator.generate(
+        report_path = await get_report_generator().generate(
             scan=scan,
             findings=scan.findings,
             format=request.format,

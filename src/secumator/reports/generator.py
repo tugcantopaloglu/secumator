@@ -13,16 +13,27 @@ class ReportGenerator:
     def __init__(self):
         self.logger = get_logger("report_generator")
         self.ai_writer = AIReportWriter()
-        self.output_dir = Path(settings.report_output_dir)
-        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self._output_dir: Path | None = None
+        self._env: Environment | None = None
 
-        template_dir = Path(__file__).parent / "templates"
-        self.env = Environment(
-            loader=FileSystemLoader(template_dir),
-            autoescape=select_autoescape(["html", "xml"]),
-        )
-        self.env.filters["severity_color"] = self._severity_color
-        self.env.filters["severity_badge"] = self._severity_badge
+    @property
+    def output_dir(self) -> Path:
+        if self._output_dir is None:
+            self._output_dir = Path(settings.report_output_dir)
+            self._output_dir.mkdir(parents=True, exist_ok=True)
+        return self._output_dir
+
+    @property
+    def env(self) -> Environment:
+        if self._env is None:
+            template_dir = Path(__file__).parent / "templates"
+            self._env = Environment(
+                loader=FileSystemLoader(template_dir),
+                autoescape=select_autoescape(["html", "xml"]),
+            )
+            self._env.filters["severity_color"] = self._severity_color
+            self._env.filters["severity_badge"] = self._severity_badge
+        return self._env
 
     async def generate(
         self,

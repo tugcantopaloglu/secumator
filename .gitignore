@@ -42,9 +42,8 @@ htmlcov/
 .mypy_cache/
 .ruff_cache/
 
-reports/
+/reports/
 *.pdf
-*.html
-!src/secumator/reports/templates/*.html
+!src/secumator/reports/
 
 docker-compose.override.yml

@@ -1,4 +1,3 @@
-from typing import Any
 import httpx
 from secumator.core import get_logger, settings
 from secumator.models.scan import Finding, Scan, Severity

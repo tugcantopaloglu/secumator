@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from secumator.core import get_logger, validate_target, settings, template_manager, rate_limiter
 from secumator.core.database import get_db
-from secumator.models.scan import Scan, ScanStatus, ScanType, Finding
+from secumator.models.scan import Scan, ScanStatus, ScanType
 from secumator.models.schemas import ScanCreate, ScanResponse, ScanListResponse, FindingResponse
 from secumator.scanners import ScanEngine
 

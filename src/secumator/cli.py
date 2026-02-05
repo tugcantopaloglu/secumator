@@ -1,5 +1,4 @@
 import asyncio
-import sys
 from pathlib import Path
 from typing import Optional
 import typer
@@ -46,7 +45,7 @@ def scan(
                 scan_obj = await engine.run_scan(scan_obj, db)
                 progress.update(task, description="[green]Scan completed!")
 
-            console.print(f"\n[bold green]✓ Scan completed![/bold green]")
+            console.print("\n[bold green]✓ Scan completed![/bold green]")
             console.print(f"  Status: {scan_obj.status.value}")
             console.print(f"  Findings: {len(scan_obj.findings)}")
 
@@ -93,7 +92,7 @@ def serve(
 ):
     """Start the API server."""
     import uvicorn
-    console.print(f"[bold cyan]Starting Secumator API server...[/bold cyan]")
+    console.print("[bold cyan]Starting Secumator API server...[/bold cyan]")
     console.print(f"  Host: {host}")
     console.print(f"  Port: {port}")
     console.print(f"  Docs: http://{host}:{port}/docs")

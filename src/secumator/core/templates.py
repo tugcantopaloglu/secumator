@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any
 import yaml
 from pathlib import Path
 from secumator.core import get_logger

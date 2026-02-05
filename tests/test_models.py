@@ -1,5 +1,4 @@
-import pytest
-from secumator.models.scan import Scan, Finding, ScanStatus, ScanType, Severity
+from secumator.models.scan import ScanStatus, ScanType, Severity
 from secumator.models.schemas import ScanCreate, ReportRequest
 
 

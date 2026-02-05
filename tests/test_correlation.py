@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 from secumator.core.correlation import (
     VulnerabilityCorrelator,
     FindingDeduplicator,
-    CorrelatedFinding,
 )
 from secumator.models.scan import Finding, Severity
 

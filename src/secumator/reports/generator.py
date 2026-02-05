@@ -93,7 +93,7 @@ class ReportGenerator:
             })
 
         return {
-            "report_title": f"Security Assessment Report",
+            "report_title": "Security Assessment Report",
             "target": scan.target,
             "scan_type": scan.scan_type.value,
             "scan_id": scan.id,

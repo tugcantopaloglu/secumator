@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from secumator.core import get_logger, vulnerability_correlator, cve_lookup, cvss_calculator
 from secumator.core.database import get_db
-from secumator.models.scan import Scan, Finding
+from secumator.models.scan import Scan
 
 router = APIRouter()
 logger = get_logger("api.correlation")

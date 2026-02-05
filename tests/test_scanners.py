@@ -1,4 +1,3 @@
-import pytest
 from secumator.scanners import NucleiScanner, NmapScanner, NiktoScanner
 
 

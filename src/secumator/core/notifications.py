@@ -6,7 +6,7 @@ from enum import Enum
 from typing import Any
 import httpx
 from secumator.core import get_logger
-from secumator.models.scan import Scan, Finding, ScanStatus
+from secumator.models.scan import Scan, Finding
 
 logger = get_logger("notifications")
 

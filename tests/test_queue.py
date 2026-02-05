@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime, timezone, timedelta
-from secumator.core.queue import ScanQueue, Priority, QueuedScan
+from secumator.core.queue import ScanQueue, Priority
 
 
 @pytest.fixture
@@ -41,8 +41,8 @@ async def test_scheduled_scan(queue):
 @pytest.mark.asyncio
 async def test_max_concurrent(queue):
     queue_id1 = await queue.enqueue(scan_id=1)
-    queue_id2 = await queue.enqueue(scan_id=2)
-    queue_id3 = await queue.enqueue(scan_id=3)
+    await queue.enqueue(scan_id=2)
+    await queue.enqueue(scan_id=3)
 
     await queue.dequeue()
     await queue.dequeue()

@@ -1,5 +1,4 @@
 import pytest
-import json
 from datetime import datetime, timezone
 from secumator.reports.sarif import SARIFExporter, export_sarif, SARIF_VERSION
 from secumator.models.scan import Scan, Finding, ScanStatus, ScanType, Severity

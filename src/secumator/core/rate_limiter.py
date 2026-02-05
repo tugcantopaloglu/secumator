@@ -8,6 +8,12 @@ from secumator.core import get_logger
 logger = get_logger("rate_limiter")
 
 
+class RateLimitExceeded(Exception):
+    def __init__(self, retry_after: int = 60):
+        self.retry_after = retry_after
+        super().__init__(f"Rate limit exceeded. Retry after {retry_after} seconds.")
+
+
 @dataclass
 class RateLimitConfig:
     requests_per_second: float = 10.0
@@ -56,7 +62,7 @@ class TokenBucket:
 
 
 class RateLimiter:
-    def __init__(self, config: RateLimitConfig | None = None):
+    def __init__(self, config: RateLimitConfig | None = None, requests_per_minute: int = 60, burst: int = 20):
         self.config = config or RateLimitConfig()
         self._global_bucket = TokenBucket(
             self.config.requests_per_second, self.config.burst_size
@@ -68,6 +74,10 @@ class RateLimiter:
         self._request_counts: dict[str, int] = defaultdict(int)
         self._error_counts: dict[str, int] = defaultdict(int)
         self._lock = asyncio.Lock()
+        
+        self._api_buckets: dict[str, TokenBucket] = {}
+        self._api_rate = requests_per_minute / 60.0
+        self._api_burst = burst
 
     async def acquire(self, target: str) -> bool:
         async with self._lock:
@@ -128,6 +138,14 @@ class RateLimiter:
                 for target, bucket in list(self._target_buckets.items())[:20]
             },
         }
+
+
+    async def is_allowed(self, identifier: str) -> bool:
+        async with self._lock:
+            if identifier not in self._api_buckets:
+                self._api_buckets[identifier] = TokenBucket(self._api_rate, self._api_burst)
+        
+        return await self._api_buckets[identifier].acquire()
 
 
 rate_limiter = RateLimiter()

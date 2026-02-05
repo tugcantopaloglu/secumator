@@ -4,10 +4,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from secumator.core import settings, get_logger, scan_queue
 from secumator.core.database import init_db
-from .routes import scans, reports, health, queue, templates, correlation
+from secumator.core.rate_limiter import RateLimiter, RateLimitExceeded
+from .routes import scans, reports, health, queue, templates, correlation, websocket, github, ai, stats
 
 
 logger = get_logger("api")
+rate_limiter = RateLimiter(requests_per_minute=settings.api_rate_limit_per_minute, burst=settings.api_rate_limit_burst)
 
 
 @asynccontextmanager
@@ -34,6 +36,10 @@ app = FastAPI(
         {"name": "Queue", "description": "Scan queue management"},
         {"name": "Templates", "description": "Scan template management"},
         {"name": "Correlation", "description": "Vulnerability correlation and CVE lookup"},
+        {"name": "GitHub", "description": "GitHub integration"},
+        {"name": "AI", "description": "AI-powered analysis"},
+        {"name": "Stats", "description": "Dashboard statistics"},
+        {"name": "WebSocket", "description": "Real-time updates"},
     ],
 )
 
@@ -51,6 +57,10 @@ app.include_router(reports.router, prefix=settings.api_prefix, tags=["Reports"])
 app.include_router(queue.router, prefix=settings.api_prefix, tags=["Queue"])
 app.include_router(templates.router, prefix=settings.api_prefix, tags=["Templates"])
 app.include_router(correlation.router, prefix=settings.api_prefix, tags=["Correlation"])
+app.include_router(github.router, prefix=settings.api_prefix, tags=["GitHub"])
+app.include_router(ai.router, prefix=settings.api_prefix, tags=["AI"])
+app.include_router(stats.router, prefix=settings.api_prefix, tags=["Stats"])
+app.include_router(websocket.router, tags=["WebSocket"])
 
 
 @app.exception_handler(Exception)
@@ -62,6 +72,15 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(
+        status_code=429,
+        content={"detail": "Rate limit exceeded. Please try again later."},
+        headers={"Retry-After": str(exc.retry_after)},
+    )
+
+
 @app.middleware("http")
 async def add_request_id(request: Request, call_next):
     import uuid
@@ -69,3 +88,18 @@ async def add_request_id(request: Request, call_next):
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id
     return response
+
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    if request.url.path.startswith("/ws"):
+        return await call_next(request)
+    
+    client_ip = request.client.host if request.client else "unknown"
+    api_key = request.headers.get("X-API-Key")
+    identifier = api_key or client_ip
+    
+    if not await rate_limiter.is_allowed(identifier):
+        raise RateLimitExceeded(retry_after=60)
+    
+    return await call_next(request)

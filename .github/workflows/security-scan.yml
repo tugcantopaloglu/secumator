@@ -1,0 +1,50 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+      
+      - name: Run pip-audit
+        run: |
+          pip install pip-audit
+          pip-audit --requirement requirements.txt --format json --output pip-audit.json || true
+      
+      - name: Run Bandit security linter
+        run: |
+          pip install bandit
+          bandit -r src/ -f json -o bandit-report.json || true
+      
+      - name: Upload security artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: |
+            trivy-results.sarif
+            pip-audit.json
+            bandit-report.json

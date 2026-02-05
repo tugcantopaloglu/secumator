@@ -44,6 +44,14 @@ class Settings(BaseSettings):
 
     nvd_api_key: str = ""
 
+    github_token: str = ""
+    github_webhook_secret: str = ""
+    github_app_id: str = ""
+    github_private_key: str = ""
+
+    api_rate_limit_per_minute: int = 60
+    api_rate_limit_burst: int = 20
+
     report_output_dir: str = "/var/lib/secumator/reports"
     log_level: str = "INFO"
 

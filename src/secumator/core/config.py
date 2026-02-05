@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     app_name: str = "Secumator"
-    app_version: str = "1.0.0"
+    app_version: str = "2.0.0"
     debug: bool = False
     environment: Literal["development", "staging", "production"] = "development"
 
@@ -31,6 +31,18 @@ class Settings(BaseSettings):
 
     scan_timeout: int = 3600
     max_concurrent_scans: int = 5
+    scan_rate_limit_per_minute: int = 30
+
+    allow_private_targets: bool = False
+    allow_localhost_targets: bool = False
+
+    slack_webhook_url: str = ""
+    discord_webhook_url: str = ""
+    teams_webhook_url: str = ""
+    notify_on_scan_complete: bool = True
+    notify_on_critical_finding: bool = True
+
+    nvd_api_key: str = ""
 
     report_output_dir: str = "/var/lib/secumator/reports"
     log_level: str = "INFO"

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from secumator.core import get_logger
+from secumator.core import get_logger, validate_target, settings, template_manager, rate_limiter
 from secumator.core.database import get_db
 from secumator.models.scan import Scan, ScanStatus, ScanType, Finding
 from secumator.models.schemas import ScanCreate, ScanResponse, ScanListResponse, FindingResponse
@@ -28,13 +28,35 @@ async def create_scan(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
 ) -> ScanResponse:
+    validation = validate_target(
+        scan_data.target,
+        allow_private=settings.allow_private_targets,
+        allow_localhost=settings.allow_localhost_targets,
+    )
+    if not validation.valid:
+        raise HTTPException(status_code=400, detail=f"Invalid target: {validation.error}")
+
+    if validation.warnings:
+        logger.warning("target_validation_warnings", target=scan_data.target, warnings=validation.warnings)
+
+    if not await rate_limiter.acquire(validation.normalized or scan_data.target):
+        raise HTTPException(status_code=429, detail="Rate limit exceeded. Please try again later.")
+
     logger.info("creating_scan", target=scan_data.target, type=scan_data.scan_type)
 
+    options = scan_data.options or {}
+    if scan_data.profile:
+        template = template_manager.get(scan_data.profile)
+        if template:
+            template_options = template_manager.to_scan_options(template)
+            template_options.update(options)
+            options = template_options
+
     scan = Scan(
-        target=scan_data.target,
+        target=validation.normalized or scan_data.target,
         scan_type=ScanType(scan_data.scan_type),
         profile=scan_data.profile,
-        options=scan_data.options,
+        options=options,
     )
     db.add(scan)
     await db.commit()

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from pathlib import Path
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -10,6 +10,7 @@ from secumator.core.database import get_db
 from secumator.models.scan import Scan, ScanStatus
 from secumator.models.schemas import ReportRequest, ReportResponse
 from secumator.reports import ReportGenerator
+from secumator.reports.sarif import export_sarif
 
 router = APIRouter()
 logger = get_logger("api.reports")
@@ -71,9 +72,46 @@ async def download_report(filename: str):
         media_type = "text/html"
     elif filename.endswith(".json"):
         media_type = "application/json"
+    elif filename.endswith(".sarif"):
+        media_type = "application/sarif+json"
 
     return FileResponse(
         path=report_path,
         filename=filename,
         media_type=media_type,
     )
+
+
+@router.get("/reports/{scan_id}/sarif")
+async def export_sarif_report(
+    scan_id: int,
+    download: bool = Query(False, description="Download as file instead of JSON response"),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(Scan).options(selectinload(Scan.findings)).where(Scan.id == scan_id)
+    )
+    scan = result.scalar_one_or_none()
+
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan not found")
+
+    if scan.status != ScanStatus.COMPLETED:
+        raise HTTPException(status_code=400, detail="Scan must be completed to export SARIF")
+
+    logger.info("exporting_sarif", scan_id=scan.id)
+
+    if download:
+        output_dir = Path(settings.report_output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        output_path = output_dir / f"secumator_report_{scan.id}_{timestamp}.sarif"
+        sarif_data = export_sarif(scan, scan.findings, output_path)
+        return FileResponse(
+            path=output_path,
+            filename=output_path.name,
+            media_type="application/sarif+json",
+        )
+    else:
+        sarif_data = export_sarif(scan, scan.findings)
+        return JSONResponse(content=sarif_data)

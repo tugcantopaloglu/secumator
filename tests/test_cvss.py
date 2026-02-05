@@ -35,7 +35,7 @@ def test_calculate_high_severity(calculator):
 
 
 def test_calculate_medium_severity(calculator):
-    vector = "CVSS:3.1/AV:N/AC:H/PR:L/UI:R/S:U/C:L/I:L/A:N"
+    vector = "CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:U/C:L/I:L/A:L"
     score = calculator.calculate(vector)
     assert 4.0 <= score.base_score < 7.0
     assert score.severity == "Medium"

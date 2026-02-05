@@ -97,7 +97,7 @@ def test_severity_mapping(exporter, sample_scan, sample_findings):
     critical_result = next(r for r in results if "SQL" in r["message"]["text"])
     assert critical_result["level"] == "error"
 
-    info_result = next(r for r in results if "Information" in r["message"]["text"])
+    info_result = next(r for r in results if "Server version" in r["message"]["text"])
     assert info_result["level"] == "none"
 
 

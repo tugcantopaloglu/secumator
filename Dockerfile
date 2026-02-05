@@ -12,16 +12,20 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nmap \
-    nikto \
     curl \
     wget \
     unzip \
+    git \
+    perl \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
-    libgdk-pixbuf2.0-0 \
+    libgdk-pixbuf-2.0-0 \
     libffi-dev \
     shared-mime-info \
     && rm -rf /var/lib/apt/lists/*
+
+RUN git clone https://github.com/sullo/nikto.git /opt/nikto && \
+    ln -s /opt/nikto/program/nikto.pl /usr/local/bin/nikto
 
 RUN ARCH=$(uname -m) && \
     if [ "$ARCH" = "x86_64" ]; then \
@@ -37,7 +41,7 @@ RUN ARCH=$(uname -m) && \
     rm nuclei.zip && \
     chmod +x /usr/local/bin/nuclei
 
-COPY pyproject.toml .
+COPY pyproject.toml README.md ./
 COPY src/ src/
 
 RUN pip install --no-cache-dir -e .

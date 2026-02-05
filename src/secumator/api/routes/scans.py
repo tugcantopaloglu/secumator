@@ -15,11 +15,14 @@ engine = ScanEngine()
 
 async def run_scan_background(scan_id: int):
     from secumator.core.database import async_session_factory
-    async with async_session_factory() as db:
-        result = await db.execute(select(Scan).where(Scan.id == scan_id))
-        scan = result.scalar_one_or_none()
-        if scan:
-            await engine.run_scan(scan, db)
+    try:
+        async with async_session_factory() as db:
+            result = await db.execute(select(Scan).where(Scan.id == scan_id))
+            scan = result.scalar_one_or_none()
+            if scan:
+                await engine.run_scan(scan, db)
+    except Exception as e:
+        logger.error("background_scan_error", scan_id=scan_id, error=str(e))
 
 
 @router.post("/scans", response_model=ScanResponse, status_code=201)

@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Any, Literal
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ScanCreate(BaseModel):
@@ -11,6 +11,8 @@ class ScanCreate(BaseModel):
 
 
 class FindingResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     title: str
     severity: Literal["critical", "high", "medium", "low", "info"]
@@ -23,11 +25,10 @@ class FindingResponse(BaseModel):
     source_tool: str | None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
-
 
 class ScanResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     target: str
     scan_type: Literal["webapp", "network", "api", "full"]
@@ -39,9 +40,6 @@ class ScanResponse(BaseModel):
     created_at: datetime
     findings_count: int = 0
     findings: list[FindingResponse] = []
-
-    class Config:
-        from_attributes = True
 
 
 class ScanListResponse(BaseModel):

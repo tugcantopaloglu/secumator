@@ -37,7 +37,14 @@ git clone https://github.com/tugcantopaloglu/secumator.git
 cd secumator
 cp .env.example .env
 # Edit .env with your configuration
-docker-compose up -d
+
+# Start with docker compose (requires Docker with compose plugin)
+docker compose up -d
+
+# Verify the API is running
+curl http://localhost:8000/health
+
+# Access the API docs
 open http://localhost:8000/docs
 ```
 
@@ -46,7 +53,16 @@ open http://localhost:8000/docs
 ```bash
 git clone https://github.com/tugcantopaloglu/secumator.git
 cd secumator
+
+# Create virtual environment (Python 3.11+ required)
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
 pip install -e ".[dev]"
+
+# Run tests to verify installation
+pytest
 
 # Run a scan
 secumator scan https://example.com --type webapp --format pdf
@@ -54,6 +70,15 @@ secumator scan https://example.com --type webapp --format pdf
 # Start the API server
 secumator serve
 ```
+
+### Requirements
+
+- **Python**: 3.11 or higher
+- **Docker**: 20.10+ with compose plugin (for containerized deployment)
+- **External Tools** (for full scanning capabilities):
+  - Nmap
+  - Nuclei
+  - Nikto (optional)
 
 ## 📖 Usage
 

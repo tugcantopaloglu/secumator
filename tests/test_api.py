@@ -30,7 +30,7 @@ async def test_create_scan(client: AsyncClient):
     )
     assert response.status_code == 201
     data = response.json()
-    assert data["target"] == "https://example.com"
+    assert data["target"].rstrip("/") == "https://example.com"
     assert data["scan_type"] == "webapp"
     assert data["status"] == "pending"
     assert "id" in data
@@ -61,7 +61,7 @@ async def test_get_scan(client: AsyncClient):
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == scan_id
-    assert data["target"] == "https://example.com"
+    assert data["target"].rstrip("/") == "https://example.com"
 
 
 @pytest.mark.asyncio

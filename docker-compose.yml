@@ -1,0 +1,66 @@
+services:
+  api:
+    build: .
+    container_name: secumator-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://secumator:secumator@db:5432/secumator
+      - REDIS_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - AI_PROVIDER=${AI_PROVIDER:-openai}
+      - DEBUG=${DEBUG:-false}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - reports:/var/lib/secumator/reports
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - secumator
+
+  db:
+    image: postgres:16-alpine
+    container_name: secumator-db
+    environment:
+      - POSTGRES_USER=secumator
+      - POSTGRES_PASSWORD=secumator
+      - POSTGRES_DB=secumator
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U secumator"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - secumator
+
+  redis:
+    image: redis:7-alpine
+    container_name: secumator-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - secumator
+
+volumes:
+  postgres_data:
+  redis_data:
+  reports:
+
+networks:
+  secumator:
+    driver: bridge

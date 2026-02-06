@@ -37,6 +37,7 @@ dev = [
     "ruff>=0.1.0",
     "mypy>=1.8.0",
     "aiosqlite>=0.19.0",
+    "types-PyYAML>=6.0.0",
 ]
 
 [project.scripts]
@@ -56,3 +57,13 @@ target-version = "py311"
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = false
+warn_unused_ignores = false
+disallow_untyped_defs = false
+ignore_missing_imports = true
+no_implicit_optional = false
+strict = false
+check_untyped_defs = false

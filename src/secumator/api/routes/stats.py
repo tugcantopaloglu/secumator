@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from secumator.core.database import get_db
 from secumator.models.scan import Scan, Finding
 
@@ -10,7 +10,7 @@ router = APIRouter()
 
 @router.get("/stats/dashboard")
 async def get_dashboard_stats(db: AsyncSession = Depends(get_db)):
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     week_ago = now - timedelta(days=7)
     month_ago = now - timedelta(days=30)
     
@@ -69,7 +69,7 @@ async def get_dashboard_stats(db: AsyncSession = Depends(get_db)):
 
 @router.get("/stats/trends")
 async def get_trends(days: int = 30, db: AsyncSession = Depends(get_db)):
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     start_date = now - timedelta(days=days)
     
     scans_by_day = []

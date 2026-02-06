@@ -13,8 +13,9 @@ class ConnectionManager:
         self.active_connections: dict[str, list[WebSocket]] = {}
         self._lock = asyncio.Lock()
 
-    async def connect(self, websocket: WebSocket, scan_id: str | None = None):
-        await websocket.accept()
+    async def connect(self, websocket: WebSocket, scan_id: str | None = None, accept: bool = True):
+        if accept:
+            await websocket.accept()
         channel = scan_id or "global"
         async with self._lock:
             if channel not in self.active_connections:
@@ -72,7 +73,7 @@ async def websocket_global(websocket: WebSocket):
                 scan_id = message.get("scan_id")
                 if scan_id:
                     await manager.disconnect(websocket)
-                    await manager.connect(websocket, str(scan_id))
+                    await manager.connect(websocket, str(scan_id), accept=False)
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
 

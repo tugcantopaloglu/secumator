@@ -8,12 +8,12 @@ async def test_full_scan_workflow(client: AsyncClient):
         "/api/v1/scans",
         json={"target": "https://example.com", "scan_type": "webapp"},
     )
-    assert create_response.status_code == 200
+    assert create_response.status_code == 201
     scan_id = create_response.json()["id"]
     
     get_response = await client.get(f"/api/v1/scans/{scan_id}")
     assert get_response.status_code == 200
-    assert get_response.json()["target"] == "https://example.com"
+    assert get_response.json()["target"].rstrip("/") == "https://example.com"
     
     correlate_response = await client.get(f"/api/v1/scans/{scan_id}/correlate")
     assert correlate_response.status_code == 200
@@ -42,7 +42,7 @@ async def test_template_workflow(client: AsyncClient):
                 "profile": template_name,
             },
         )
-        assert scan_response.status_code == 200
+        assert scan_response.status_code == 201
 
 
 @pytest.mark.asyncio

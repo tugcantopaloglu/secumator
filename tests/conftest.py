@@ -4,6 +4,7 @@ import pytest
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from secumator.api import app
+from secumator.api.main import rate_limiter
 from secumator.core.database import Base, get_db
 
 
@@ -27,6 +28,15 @@ async def setup_database():
     yield
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+
+
+@pytest.fixture(autouse=True)
+async def reset_rate_limiter():
+    rate_limiter._api_buckets.clear()
+    rate_limiter._target_buckets.clear()
+    yield
+    rate_limiter._api_buckets.clear()
+    rate_limiter._target_buckets.clear()
 
 
 @pytest.fixture

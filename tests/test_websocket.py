@@ -1,7 +1,5 @@
-import pytest
 from fastapi.testclient import TestClient
 from secumator.api.main import app
-import json
 
 
 def test_websocket_global_connection():

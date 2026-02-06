@@ -21,6 +21,7 @@ class QueueStatusResponse(BaseModel):
     completed: int
     failed: int
     rate_limit_remaining: int
+    is_processing: bool
 
 
 class QueueItemResponse(BaseModel):

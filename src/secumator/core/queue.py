@@ -137,6 +137,7 @@ class ScanQueue:
             "completed": len(self._completed),
             "failed": len(self._failed),
             "rate_limit_remaining": max(0, self.rate_limit_per_minute - len(self._execution_times)),
+            "is_processing": self._running_flag,
         }
 
     def get_queue_items(self) -> list[dict[str, Any]]:

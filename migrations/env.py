@@ -10,9 +10,8 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-from secumator.core.database import Base
-from secumator.core.config import settings
-from secumator.models.scan import Scan, Finding
+from secumator.core.database import Base  # noqa: E402
+from secumator.core.config import settings  # noqa: E402
 
 target_metadata = Base.metadata
 

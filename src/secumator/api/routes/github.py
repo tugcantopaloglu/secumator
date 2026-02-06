@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from secumator.core import get_logger, settings
 from secumator.core.database import get_db
 from secumator.models.scan import Scan
-from secumator.scanners.engine import ScanEngine
 
 router = APIRouter()
 logger = get_logger("api.github")
@@ -171,7 +170,7 @@ async def github_webhook(
     payload = await request.json()
     event = x_github_event or "unknown"
     
-    logger.info("github_webhook_received", event=event)
+    logger.info("github_webhook_received", github_event=event)
     
     if event == "pull_request" and payload.get("action") in ["opened", "synchronize"]:
         pr = payload.get("pull_request", {})
@@ -179,7 +178,7 @@ async def github_webhook(
         
         repo_url = repo.get("html_url", "")
         pr_number = pr.get("number")
-        head_sha = pr.get("head", {}).get("sha")
+        pr.get("head", {}).get("sha")
         
         if repo_url and pr_number:
             scan = Scan(

@@ -2,7 +2,7 @@
 name = "secumator"
 version = "1.0.0"
 description = "Professional security audit report generator with AI-powered analysis"
-authors = [{name = "Tuğcan Topaloğlu", email = "topaloglutugcan@gmail.com"}]
+authors = [{name = "Tuğcan Topaloğlu", email = "tugcan@tugcan.dev"}]
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.11"

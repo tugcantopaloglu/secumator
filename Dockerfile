@@ -1,6 +1,6 @@
 FROM python:3.12-slim
 
-LABEL maintainer="Tuğcan Topaloğlu <topaloglutugcan@gmail.com>"
+LABEL maintainer="Tuğcan Topaloğlu <tugcan@tugcan.dev>"
 LABEL description="Secumator - Professional Security Audit Report Generator"
 
 ENV PYTHONUNBUFFERED=1 \

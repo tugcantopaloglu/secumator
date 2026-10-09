@@ -1,11 +1,11 @@
 import asyncio
 from pathlib import Path
-from typing import Optional
+
 import typer
-from rich.console import Console
-from rich.table import Table
-from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich import print as rprint
+from rich.console import Console
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 
 app = typer.Typer(name="secumator", help="Professional security audit report generator")
 console = Console()
@@ -15,15 +15,15 @@ console = Console()
 def scan(
     target: str = typer.Argument(..., help="Target URL or IP address"),
     scan_type: str = typer.Option("webapp", "--type", "-t", help="Scan type: webapp, network, api, full"),
-    output: Optional[str] = typer.Option(None, "--output", "-o", help="Output report path"),
+    output: str | None = typer.Option(None, "--output", "-o", help="Output report path"),
     format: str = typer.Option("pdf", "--format", "-f", help="Report format: pdf, html, json"),
     no_ai: bool = typer.Option(False, "--no-ai", help="Disable AI-powered analysis"),
 ):
     """Run a security scan and generate a report."""
     from secumator.core.database import async_session_factory, init_db
     from secumator.models.scan import Scan, ScanType
-    from secumator.scanners import ScanEngine
     from secumator.reports import ReportGenerator
+    from secumator.scanners import ScanEngine
 
     async def run():
         await init_db()
@@ -86,7 +86,7 @@ def scan(
 
 @app.command()
 def serve(
-    host: str = typer.Option("0.0.0.0", "--host", "-h", help="Host to bind"),
+    host: str = typer.Option("127.0.0.1", "--host", "-h", help="Host to bind"),
     port: int = typer.Option(8000, "--port", "-p", help="Port to bind"),
     reload: bool = typer.Option(False, "--reload", "-r", help="Enable auto-reload"),
 ):
@@ -104,10 +104,11 @@ def list_scans(
     limit: int = typer.Option(10, "--limit", "-l", help="Number of scans to show"),
 ):
     """List recent scans."""
-    from secumator.core.database import async_session_factory, init_db
-    from secumator.models.scan import Scan
     from sqlalchemy import select
     from sqlalchemy.orm import selectinload
+
+    from secumator.core.database import async_session_factory, init_db
+    from secumator.models.scan import Scan
 
     async def run():
         await init_db()

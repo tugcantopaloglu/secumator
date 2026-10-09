@@ -1,16 +1,19 @@
+from datetime import UTC, datetime, timedelta
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import datetime, timedelta, timezone
+
 from secumator.core.database import get_db
-from secumator.models.scan import Scan, Finding
+from secumator.models.scan import Finding, Scan
 
 router = APIRouter()
 
 
 @router.get("/stats/dashboard")
-async def get_dashboard_stats(db: AsyncSession = Depends(get_db)):
-    now = datetime.now(timezone.utc)
+async def get_dashboard_stats(db: Annotated[AsyncSession, Depends(get_db)]):
+    now = datetime.now(UTC)
     week_ago = now - timedelta(days=7)
     month_ago = now - timedelta(days=30)
     
@@ -68,8 +71,8 @@ async def get_dashboard_stats(db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/stats/trends")
-async def get_trends(days: int = 30, db: AsyncSession = Depends(get_db)):
-    now = datetime.now(timezone.utc)
+async def get_trends(days: int = 30, *, db: Annotated[AsyncSession, Depends(get_db)]):
+    now = datetime.now(UTC)
     start_date = now - timedelta(days=days)
     
     scans_by_day = []
@@ -122,7 +125,7 @@ async def get_trends(days: int = 30, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/stats/top-vulnerabilities")
-async def get_top_vulnerabilities(limit: int = 10, db: AsyncSession = Depends(get_db)):
+async def get_top_vulnerabilities(limit: int = 10, *, db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(
         select(Finding.title, func.count(Finding.id).label("count"))
         .group_by(Finding.title)

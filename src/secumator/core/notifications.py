@@ -1,12 +1,14 @@
 import asyncio
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
+
 import httpx
-from secumator.core import get_logger
-from secumator.models.scan import Scan, Finding
+
+from secumator.core.logging import get_logger
+from secumator.models.scan import Finding, Scan
 
 logger = get_logger("notifications")
 
@@ -36,7 +38,7 @@ class NotificationPayload:
 
     def __post_init__(self):
         if self.timestamp is None:
-            self.timestamp = datetime.now(timezone.utc)
+            self.timestamp = datetime.now(UTC)
 
 
 class WebhookProvider(ABC):
@@ -116,7 +118,7 @@ class SlackWebhook(WebhookProvider):
                     logger.error("slack_webhook_failed", status=response.status_code, body=response.text)
                 return success
         except Exception as e:
-            logger.error("slack_webhook_error", error=str(e))
+            logger.exception("slack_webhook_error", error=str(e))
             return False
 
 
@@ -187,7 +189,7 @@ class DiscordWebhook(WebhookProvider):
                     logger.error("discord_webhook_failed", status=response.status_code, body=response.text)
                 return success
         except Exception as e:
-            logger.error("discord_webhook_error", error=str(e))
+            logger.exception("discord_webhook_error", error=str(e))
             return False
 
 
@@ -240,7 +242,7 @@ class TeamsWebhook(WebhookProvider):
                 )
                 return response.status_code == 200
         except Exception as e:
-            logger.error("teams_webhook_error", error=str(e))
+            logger.exception("teams_webhook_error", error=str(e))
             return False
 
 

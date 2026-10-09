@@ -1,8 +1,10 @@
 from dataclasses import dataclass, field
-from typing import Any
-import yaml
 from pathlib import Path
-from secumator.core import get_logger
+from typing import Any
+
+import yaml
+
+from secumator.core.logging import get_logger
 from secumator.models.scan import ScanType
 
 logger = get_logger("templates")
@@ -198,7 +200,7 @@ class TemplateManager:
                         self._templates[template.name] = template
                         logger.info("custom_template_loaded", name=template.name)
             except Exception as e:
-                logger.error("template_load_error", file=str(file), error=str(e))
+                logger.exception("template_load_error", file=str(file), error=str(e))
 
     def get(self, name: str) -> ScanTemplate | None:
         return self._templates.get(name)

@@ -56,3 +56,9 @@ def test_nikto_parse_output():
     findings = scanner.parse_output(json_output)
     assert len(findings) == 1
     assert "Test vulnerability" in findings[0]["title"]
+
+
+def test_nmap_rejects_xml_entities():
+    scanner = NmapScanner()
+    payload = '<!DOCTYPE nmaprun [<!ENTITY unsafe "fixture">]><nmaprun>&unsafe;</nmaprun>'
+    assert scanner.parse_output(payload) == []

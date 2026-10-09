@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
+
 from secumator.core import get_logger
 from secumator.models.scan import Finding, Scan, Severity
 
@@ -11,7 +12,7 @@ SARIF_SCHEMA = "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Sc
 
 
 class SARIFExporter:
-    SEVERITY_TO_LEVEL = {
+    SEVERITY_TO_LEVEL: ClassVar[dict[Severity, str]] = {
         Severity.CRITICAL: "error",
         Severity.HIGH: "error",
         Severity.MEDIUM: "warning",
@@ -19,7 +20,7 @@ class SARIFExporter:
         Severity.INFO: "none",
     }
 
-    SEVERITY_TO_RANK = {
+    SEVERITY_TO_RANK: ClassVar[dict[Severity, float]] = {
         Severity.CRITICAL: 1.0,
         Severity.HIGH: 0.8,
         Severity.MEDIUM: 0.5,

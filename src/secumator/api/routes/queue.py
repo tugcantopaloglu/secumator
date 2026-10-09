@@ -1,8 +1,10 @@
 from datetime import datetime
+from typing import Any, Literal
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Any, Literal
-from secumator.core import get_logger, scan_queue, Priority
+
+from secumator.core import Priority, get_logger, scan_queue
 
 router = APIRouter()
 logger = get_logger("api.queue")

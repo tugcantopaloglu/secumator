@@ -1,12 +1,25 @@
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from secumator.core import settings, get_logger, scan_queue
+
+from secumator.core import get_logger, scan_queue, settings
 from secumator.core.database import init_db
 from secumator.core.rate_limiter import RateLimiter, RateLimitExceeded
-from .routes import scans, reports, health, queue, templates, correlation, websocket, github, ai, stats
 
+from .routes import (
+    ai,
+    correlation,
+    github,
+    health,
+    queue,
+    reports,
+    scans,
+    stats,
+    templates,
+    websocket,
+)
 
 logger = get_logger("api")
 rate_limiter = RateLimiter(requests_per_minute=settings.api_rate_limit_per_minute, burst=settings.api_rate_limit_burst)

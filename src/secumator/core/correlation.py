@@ -1,10 +1,11 @@
+import hashlib
+import re
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
-import re
-import hashlib
-from secumator.core import get_logger
+
+from secumator.core.logging import get_logger
 from secumator.models.scan import Finding, Severity
 
 logger = get_logger("correlation")
@@ -118,7 +119,7 @@ class VulnerabilityCorrelator:
         severity = finding.severity.value
 
         key_string = f"{title_normalized}:{component}:{severity}"
-        return hashlib.md5(key_string.encode()).hexdigest()[:16]
+        return hashlib.md5(key_string.encode(), usedforsecurity=False).hexdigest()[:16]
 
     def _normalize_title(self, title: str) -> str:
         title = title.lower()
@@ -136,8 +137,8 @@ class VulnerabilityCorrelator:
 
     def _correlate_by_cve(self, f1: Finding, f2: Finding) -> bool:
         if f1.cve_id and f2.cve_id:
-            cves1 = set(c.upper() for c in self.CVE_PATTERN.findall(f1.cve_id))
-            cves2 = set(c.upper() for c in self.CVE_PATTERN.findall(f2.cve_id))
+            cves1 = {c.upper() for c in self.CVE_PATTERN.findall(f1.cve_id)}
+            cves2 = {c.upper() for c in self.CVE_PATTERN.findall(f2.cve_id)}
             return bool(cves1 & cves2)
         return False
 
@@ -196,11 +197,7 @@ class VulnerabilityCorrelator:
         w1 = get_weakness_type(f1.title)
         w2 = get_weakness_type(f2.title)
 
-        if w1 and w2 and w1 == w2:
-            if f1.affected_component == f2.affected_component:
-                return True
-
-        return False
+        return bool(w1 and w2 and w1 == w2 and f1.affected_component == f2.affected_component)
 
     def _merge_findings(self, findings: list[Finding]) -> CorrelatedFinding:
         highest_severity = max(findings, key=lambda f: self._severity_order(f.severity))
@@ -229,10 +226,11 @@ class VulnerabilityCorrelator:
 
         confidence = min(1.0, 0.5 + (len(all_tools) * 0.2) + (0.1 if all_cves else 0))
 
-        first_seen = min((f.created_at for f in findings), default=datetime.now(timezone.utc))
+        first_seen = min((f.created_at for f in findings), default=datetime.now(UTC))
 
         corr_id = hashlib.md5(
-            f"{highest_severity.title}:{','.join(sorted(all_cves))}:{','.join(sorted(all_components))}".encode()
+            f"{highest_severity.title}:{','.join(sorted(all_cves))}:{','.join(sorted(all_components))}".encode(),
+            usedforsecurity=False,
         ).hexdigest()[:12]
 
         return CorrelatedFinding(
@@ -291,7 +289,7 @@ class FindingDeduplicator:
             return f"cve:{cve}"
 
         key_string = f"{title}:{component}"
-        return hashlib.md5(key_string.encode()).hexdigest()
+        return hashlib.md5(key_string.encode(), usedforsecurity=False).hexdigest()
 
     def _should_replace(self, existing: Finding, new: Finding) -> bool:
         severity_order = {"critical": 0, "high": 1, "medium": 2, "low": 3, "info": 4}

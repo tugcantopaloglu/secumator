@@ -1,9 +1,13 @@
 import re
 import tempfile
-import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
+
+from defusedxml import ElementTree as ET
+from defusedxml.common import DefusedXmlException
+
 from secumator.core.config import settings
+
 from .base import BaseScanner, ScanResult
 
 
@@ -56,7 +60,7 @@ class NmapScanner(BaseScanner):
         except TimeoutError as e:
             return ScanResult(success=False, error=str(e))
         except Exception as e:
-            self.logger.error("nmap_scan_failed", error=str(e))
+            self.logger.exception("nmap_scan_failed", error=str(e))
             return ScanResult(success=False, error=str(e))
         finally:
             Path(output_file).unlink(missing_ok=True)
@@ -122,7 +126,7 @@ class NmapScanner(BaseScanner):
                         }
                         findings.append(finding)
 
-        except ET.ParseError as e:
+        except (ET.ParseError, DefusedXmlException) as e:
             self.logger.error("nmap_parse_error", error=str(e))
 
         return findings

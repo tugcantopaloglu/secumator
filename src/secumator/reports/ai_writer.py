@@ -1,4 +1,5 @@
 import httpx
+
 from secumator.core import get_logger, settings
 from secumator.models.scan import Finding, Scan, Severity
 
@@ -17,7 +18,7 @@ class AIReportWriter:
             response = await self._call_ai(prompt)
             return response
         except Exception as e:
-            self.logger.error("ai_summary_failed", error=str(e))
+            self.logger.exception("ai_summary_failed", error=str(e))
             return self._generate_fallback_summary(scan, findings, severity_counts)
 
     async def generate_finding_analysis(self, finding: Finding) -> dict[str, str]:
@@ -27,7 +28,7 @@ class AIReportWriter:
             response = await self._call_ai(prompt)
             return {"analysis": response, "ai_generated": True}
         except Exception as e:
-            self.logger.error("ai_analysis_failed", finding_id=finding.id, error=str(e))
+            self.logger.exception("ai_analysis_failed", finding_id=finding.id, error=str(e))
             return {"analysis": finding.description or "", "ai_generated": False}
 
     async def generate_remediation_plan(self, findings: list[Finding]) -> str:
@@ -41,7 +42,7 @@ class AIReportWriter:
             response = await self._call_ai(prompt)
             return response
         except Exception as e:
-            self.logger.error("ai_remediation_failed", error=str(e))
+            self.logger.exception("ai_remediation_failed", error=str(e))
             return self._generate_fallback_remediation(critical_high)
 
     async def _call_ai(self, prompt: str) -> str:

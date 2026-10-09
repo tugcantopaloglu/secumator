@@ -1,9 +1,11 @@
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, ClassVar
+
 import httpx
-from secumator.core import get_logger
+
+from secumator.core.logging import get_logger
 
 logger = get_logger("cvss")
 
@@ -26,7 +28,7 @@ class CVSSScore:
 
 
 class CVSSCalculator:
-    SEVERITY_THRESHOLDS_V3 = [
+    SEVERITY_THRESHOLDS_V3: ClassVar[list[tuple[float, str]]] = [
         (0.0, "None"),
         (0.1, "Low"),
         (4.0, "Medium"),
@@ -34,7 +36,7 @@ class CVSSCalculator:
         (9.0, "Critical"),
     ]
 
-    V31_WEIGHTS = {
+    V31_WEIGHTS: ClassVar[dict[str, Any]] = {
         "AV": {"N": 0.85, "A": 0.62, "L": 0.55, "P": 0.2},
         "AC": {"L": 0.77, "H": 0.44},
         "PR": {
@@ -180,7 +182,7 @@ class CVELookup:
                     logger.warning("nvd_api_error", status=response.status_code, cve_id=cve_id)
 
         except Exception as e:
-            logger.error("cve_lookup_error", cve_id=cve_id, error=str(e))
+            logger.exception("cve_lookup_error", cve_id=cve_id, error=str(e))
 
         return None
 

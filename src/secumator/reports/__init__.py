@@ -1,4 +1,4 @@
-from .generator import ReportGenerator
 from .ai_writer import AIReportWriter
+from .generator import ReportGenerator
 
-__all__ = ["ReportGenerator", "AIReportWriter"]
+__all__ = ["AIReportWriter", "ReportGenerator"]

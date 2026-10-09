@@ -1,10 +1,12 @@
 import ipaddress
 import re
 import socket
+from typing import ClassVar, Literal
 from urllib.parse import urlparse
-from typing import Literal
+
 from pydantic import BaseModel
-from secumator.core import get_logger
+
+from secumator.core.logging import get_logger
 
 logger = get_logger("validators")
 
@@ -18,7 +20,7 @@ class ValidationResult(BaseModel):
 
 
 class TargetValidator:
-    PRIVATE_NETWORKS = [
+    PRIVATE_NETWORKS: ClassVar[list[ipaddress.IPv4Network | ipaddress.IPv6Network]] = [
         ipaddress.ip_network("10.0.0.0/8"),
         ipaddress.ip_network("172.16.0.0/12"),
         ipaddress.ip_network("192.168.0.0/16"),
@@ -29,8 +31,8 @@ class TargetValidator:
         ipaddress.ip_network("fc00::/7"),
     ]
 
-    DANGEROUS_PORTS = {22, 23, 3389, 5900}
-    BLOCKED_DOMAINS = {"localhost", "127.0.0.1", "0.0.0.0"}
+    DANGEROUS_PORTS: ClassVar[set[int]] = {22, 23, 3389, 5900}
+    BLOCKED_DOMAINS: ClassVar[set[str]] = {"localhost", "127.0.0.1", "0.0.0.0"}
 
     URL_REGEX = re.compile(
         r"^https?://"
@@ -118,8 +120,8 @@ class TargetValidator:
                 warnings=warnings,
             )
 
-        except Exception as e:
-            return ValidationResult(valid=False, error=f"Invalid URL: {str(e)}")
+        except (ValueError, TypeError) as e:
+            return ValidationResult(valid=False, error=f"Invalid URL: {e!s}")
 
     def _validate_ip(self, target: str) -> ValidationResult | None:
         try:

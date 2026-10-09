@@ -1,11 +1,14 @@
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+from jinja2 import Environment, FileSystemLoader, TemplateError, select_autoescape
 from weasyprint import HTML
+
 from secumator.core import get_logger, settings
 from secumator.models.scan import Finding, Scan, Severity
+
 from .ai_writer import AIReportWriter
 
 
@@ -50,7 +53,7 @@ class ReportGenerator:
             scan, findings, include_executive_summary, include_ai_analysis
         )
 
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
         base_filename = f"secumator_report_{scan.id}_{timestamp}"
 
         if format == "json":
@@ -108,7 +111,7 @@ class ReportGenerator:
             "target": scan.target,
             "scan_type": scan.scan_type.value,
             "scan_id": scan.id,
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
             "scan_started": scan.started_at.isoformat() if scan.started_at else None,
             "scan_completed": scan.completed_at.isoformat() if scan.completed_at else None,
             "total_findings": len(findings),
@@ -129,7 +132,7 @@ class ReportGenerator:
         template_file = f"{template}.html"
         try:
             tmpl = self.env.get_template(template_file)
-        except Exception:
+        except TemplateError:
             tmpl = self.env.get_template("professional.html")
 
         html_content = tmpl.render(**report_data)

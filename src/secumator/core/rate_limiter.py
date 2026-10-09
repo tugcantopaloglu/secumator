@@ -3,7 +3,8 @@ import time
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any
-from secumator.core import get_logger
+
+from secumator.core.logging import get_logger
 
 logger = get_logger("rate_limiter")
 

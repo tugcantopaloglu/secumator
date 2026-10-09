@@ -1,10 +1,12 @@
+from typing import Annotated, Any
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from secumator.core import get_logger, vulnerability_correlator, cve_lookup, cvss_calculator
+
+from secumator.core import cve_lookup, cvss_calculator, get_logger, vulnerability_correlator
 from secumator.core.database import get_db
 from secumator.models.scan import Scan
 
@@ -61,7 +63,7 @@ class CVSSCalculateResponse(BaseModel):
 
 
 @router.get("/scans/{scan_id}/correlate", response_model=CorrelationResultResponse)
-async def correlate_scan_findings(scan_id: int, db: AsyncSession = Depends(get_db)):
+async def correlate_scan_findings(scan_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(
         select(Scan).options(selectinload(Scan.findings)).where(Scan.id == scan_id)
     )
@@ -134,7 +136,7 @@ async def calculate_cvss(request: CVSSCalculateRequest):
 
 
 @router.post("/scans/{scan_id}/enrich-cves")
-async def enrich_scan_cves(scan_id: int, db: AsyncSession = Depends(get_db)):
+async def enrich_scan_cves(scan_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(
         select(Scan).options(selectinload(Scan.findings)).where(Scan.id == scan_id)
     )

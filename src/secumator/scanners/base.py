@@ -3,6 +3,7 @@ import shutil
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any
+
 from secumator.core import get_logger
 from secumator.models.scan import Severity
 
@@ -43,11 +44,11 @@ class BaseScanner(ABC):
             )
             stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
             return proc.returncode or 0, stdout.decode(), stderr.decode()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             proc.kill()
             raise TimeoutError(f"Command timed out after {timeout}s")
         except Exception as e:
-            self.logger.error("command_failed", error=str(e))
+            self.logger.exception("command_failed", error=str(e))
             raise
 
     @staticmethod

@@ -1,11 +1,13 @@
 import asyncio
 import heapq
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import IntEnum
-from typing import Any, Callable, Coroutine
+from typing import Any
 from uuid import uuid4
-from secumator.core import get_logger
+
+from secumator.core.logging import get_logger
 
 
 class Priority(IntEnum):
@@ -22,7 +24,7 @@ class QueuedScan:
     scan_id: int = field(compare=False)
     queue_id: str = field(compare=False, default_factory=lambda: str(uuid4()))
     options: dict[str, Any] = field(compare=False, default_factory=dict)
-    created_at: datetime = field(compare=False, default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(compare=False, default_factory=lambda: datetime.now(UTC))
     retries: int = field(compare=False, default=0)
     max_retries: int = field(compare=False, default=3)
 
@@ -55,7 +57,7 @@ class ScanQueue:
         async with self._lock:
             queued = QueuedScan(
                 priority=priority.value,
-                scheduled_at=scheduled_at or datetime.now(timezone.utc),
+                scheduled_at=scheduled_at or datetime.now(UTC),
                 scan_id=scan_id,
                 options=options or {},
             )
@@ -71,7 +73,7 @@ class ScanQueue:
 
     async def dequeue(self) -> QueuedScan | None:
         async with self._lock:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             self._execution_times = [t for t in self._execution_times if (now - t).total_seconds() < 60]
 
             if len(self._execution_times) >= self.rate_limit_per_minute:
@@ -179,7 +181,7 @@ class ScanQueue:
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                self.logger.error("queue_process_error", error=str(e))
+                self.logger.exception("queue_process_error", error=str(e))
                 await asyncio.sleep(5)
 
     async def _execute_scan(self, queued: QueuedScan):
@@ -187,6 +189,7 @@ class ScanQueue:
             success = await self._scan_callback(queued.scan_id)
             await self.complete(queued.queue_id, success=success)
         except Exception as e:
+            self.logger.exception("scan_callback_failed", scan_id=queued.scan_id)
             await self.complete(queued.queue_id, success=False, error=str(e))
 
 

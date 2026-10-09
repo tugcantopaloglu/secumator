@@ -1,12 +1,15 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
+
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from secumator.core import get_logger
 from secumator.models.scan import Finding, Scan, ScanStatus, ScanType, Severity
+
 from .base import ScanResult
-from .nuclei import NucleiScanner
-from .nmap import NmapScanner
 from .nikto import NiktoScanner
+from .nmap import NmapScanner
+from .nuclei import NucleiScanner
 
 
 class ScanEngine:
@@ -29,7 +32,7 @@ class ScanEngine:
         self.logger.info("starting_scan", scan_id=scan.id, target=scan.target, type=scan.scan_type.value)
 
         scan.status = ScanStatus.RUNNING
-        scan.started_at = datetime.now(timezone.utc)
+        scan.started_at = datetime.now(UTC)
         await db.commit()
 
         scanners = self.get_scanners_for_type(scan.scan_type)
@@ -57,8 +60,8 @@ class ScanEngine:
                     self.logger.error("scanner_failed", scanner=scanner_name, error=result.error)
 
             except Exception as e:
-                self.logger.error("scanner_exception", scanner=scanner_name, error=str(e))
-                errors.append(f"{scanner_name}: {str(e)}")
+                self.logger.exception("scanner_exception", scanner=scanner_name, error=str(e))
+                errors.append(f"{scanner_name}: {e!s}")
 
         for finding_data in all_findings:
             finding = Finding(
@@ -77,7 +80,7 @@ class ScanEngine:
             db.add(finding)
 
         scan.raw_output = all_raw_output
-        scan.completed_at = datetime.now(timezone.utc)
+        scan.completed_at = datetime.now(UTC)
 
         if errors and not all_findings:
             scan.status = ScanStatus.FAILED

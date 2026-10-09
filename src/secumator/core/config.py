@@ -1,5 +1,6 @@
 from functools import lru_cache
 from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -11,11 +12,11 @@ class Settings(BaseSettings):
     debug: bool = False
     environment: Literal["development", "staging", "production"] = "development"
 
-    api_host: str = "0.0.0.0"
+    api_host: str = "127.0.0.1"
     api_port: int = 8000
     api_prefix: str = "/api/v1"
     secret_key: str = "change-me-in-production"
-    allowed_origins: list[str] = ["*"]
+    allowed_origins: list[str] = ["http://localhost:3000"]
 
     database_url: str = "postgresql+asyncpg://secumator:secumator@localhost:5432/secumator"
     redis_url: str = "redis://localhost:6379/0"

@@ -1,7 +1,12 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
 from redis.asyncio import Redis
+from redis.exceptions import RedisError
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from secumator.core import settings
 from secumator.core.database import get_db
 from secumator.models.schemas import HealthResponse
@@ -10,20 +15,20 @@ router = APIRouter()
 
 
 @router.get("/health", response_model=HealthResponse)
-async def health_check(db: AsyncSession = Depends(get_db)) -> HealthResponse:
+async def health_check(db: Annotated[AsyncSession, Depends(get_db)]) -> HealthResponse:
     db_status = "healthy"
     redis_status = "healthy"
 
     try:
         await db.execute(text("SELECT 1"))
-    except Exception:
+    except (SQLAlchemyError, OSError):
         db_status = "unhealthy"
 
     try:
         redis = Redis.from_url(settings.redis_url)
         await redis.ping()
         await redis.close()
-    except Exception:
+    except (RedisError, OSError, ValueError):
         redis_status = "unhealthy"
 
     return HealthResponse(

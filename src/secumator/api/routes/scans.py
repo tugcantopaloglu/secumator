@@ -1,11 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
-from sqlalchemy import select, func
+from typing import Annotated
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from secumator.core import get_logger, validate_target, settings, template_manager, rate_limiter
+
+from secumator.core import get_logger, rate_limiter, settings, template_manager, validate_target
 from secumator.core.database import get_db
 from secumator.models.scan import Scan, ScanStatus, ScanType
-from secumator.models.schemas import ScanCreate, ScanResponse, ScanListResponse, FindingResponse
+from secumator.models.schemas import FindingResponse, ScanCreate, ScanListResponse, ScanResponse
 from secumator.scanners import ScanEngine
 
 router = APIRouter()
@@ -22,14 +25,14 @@ async def run_scan_background(scan_id: int):
             if scan:
                 await engine.run_scan(scan, db)
     except Exception as e:
-        logger.error("background_scan_error", scan_id=scan_id, error=str(e))
+        logger.exception("background_scan_error", scan_id=scan_id, error=str(e))
 
 
 @router.post("/scans", response_model=ScanResponse, status_code=201)
 async def create_scan(
     scan_data: ScanCreate,
     background_tasks: BackgroundTasks,
-    db: AsyncSession = Depends(get_db),
+    db: Annotated[AsyncSession, Depends(get_db)],
 ) -> ScanResponse:
     validation = validate_target(
         scan_data.target,
@@ -87,7 +90,8 @@ async def list_scans(
     scan_type: str | None = Query(None),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    db: AsyncSession = Depends(get_db),
+    *,
+    db: Annotated[AsyncSession, Depends(get_db)],
 ) -> ScanListResponse:
     query = select(Scan).options(selectinload(Scan.findings))
 
@@ -123,7 +127,7 @@ async def list_scans(
 
 
 @router.get("/scans/{scan_id}", response_model=ScanResponse)
-async def get_scan(scan_id: int, db: AsyncSession = Depends(get_db)) -> ScanResponse:
+async def get_scan(scan_id: int, db: Annotated[AsyncSession, Depends(get_db)]) -> ScanResponse:
     result = await db.execute(
         select(Scan).options(selectinload(Scan.findings)).where(Scan.id == scan_id)
     )
@@ -165,7 +169,7 @@ async def get_scan(scan_id: int, db: AsyncSession = Depends(get_db)) -> ScanResp
 
 
 @router.delete("/scans/{scan_id}", status_code=204)
-async def delete_scan(scan_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_scan(scan_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(select(Scan).where(Scan.id == scan_id))
     scan = result.scalar_one_or_none()
 
@@ -180,7 +184,7 @@ async def delete_scan(scan_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/scans/{scan_id}/cancel", response_model=ScanResponse)
-async def cancel_scan(scan_id: int, db: AsyncSession = Depends(get_db)) -> ScanResponse:
+async def cancel_scan(scan_id: int, db: Annotated[AsyncSession, Depends(get_db)]) -> ScanResponse:
     result = await db.execute(select(Scan).where(Scan.id == scan_id))
     scan = result.scalar_one_or_none()
 

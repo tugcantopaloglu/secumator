@@ -1,8 +1,10 @@
 import enum
 from datetime import datetime
 from typing import Any
+
 from sqlalchemy import JSON, DateTime, Enum, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from secumator.core.database import Base
 
 

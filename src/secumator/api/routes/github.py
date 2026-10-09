@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, Header, Request
-from pydantic import BaseModel, Field
-from typing import Any
-import httpx
-import hmac
 import hashlib
+import hmac
+from typing import Annotated, Any
+
+import httpx
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from secumator.core import get_logger, settings
 from secumator.core.database import get_db
 from secumator.models.scan import Scan
@@ -127,7 +129,7 @@ def format_findings_for_pr(findings: list[dict]) -> str:
 
 
 @router.post("/github/scan", response_model=GitHubScanResponse)
-async def scan_github_repo(request: GitHubScanRequest, db: AsyncSession = Depends(get_db)):
+async def scan_github_repo(request: GitHubScanRequest, db: Annotated[AsyncSession, Depends(get_db)]):
     repo_parts = request.repo_url.replace("https://github.com/", "").replace(".git", "").split("/")
     if len(repo_parts) < 2:
         raise HTTPException(status_code=400, detail="Invalid GitHub URL")
@@ -159,13 +161,15 @@ async def github_webhook(
     request: Request,
     x_hub_signature_256: str | None = Header(None),
     x_github_event: str | None = Header(None),
-    db: AsyncSession = Depends(get_db),
+    *,
+    db: Annotated[AsyncSession, Depends(get_db)],
 ):
     body = await request.body()
     
-    if settings.github_webhook_secret:
-        if not verify_github_signature(body, x_hub_signature_256 or "", settings.github_webhook_secret):
-            raise HTTPException(status_code=401, detail="Invalid signature")
+    if settings.github_webhook_secret and not verify_github_signature(
+        body, x_hub_signature_256 or "", settings.github_webhook_secret
+    ):
+        raise HTTPException(status_code=401, detail="Invalid signature")
     
     payload = await request.json()
     event = x_github_event or "unknown"
@@ -204,7 +208,8 @@ async def post_github_pr_comment(
     pr_number: int,
     repo: str,
     token: str = Header(..., alias="X-GitHub-Token"),
-    db: AsyncSession = Depends(get_db),
+    *,
+    db: Annotated[AsyncSession, Depends(get_db)],
 ):
     from sqlalchemy import select
     from sqlalchemy.orm import selectinload

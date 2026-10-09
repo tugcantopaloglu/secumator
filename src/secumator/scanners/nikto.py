@@ -2,7 +2,9 @@ import json
 import tempfile
 from pathlib import Path
 from typing import Any
+
 from secumator.core.config import settings
+
 from .base import BaseScanner, ScanResult
 
 
@@ -53,7 +55,7 @@ class NiktoScanner(BaseScanner):
         except TimeoutError as e:
             return ScanResult(success=False, error=str(e))
         except Exception as e:
-            self.logger.error("nikto_scan_failed", error=str(e))
+            self.logger.exception("nikto_scan_failed", error=str(e))
             return ScanResult(success=False, error=str(e))
         finally:
             Path(output_file).unlink(missing_ok=True)

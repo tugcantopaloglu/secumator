@@ -1,7 +1,9 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from typing import Any
-import json
 import asyncio
+import json
+from typing import Any
+
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+
 from secumator.core import get_logger
 
 router = APIRouter()
@@ -42,6 +44,7 @@ class ConnectionManager:
             try:
                 await connection.send_json(message)
             except Exception:
+                logger.exception("websocket_send_failed")
                 await self.disconnect(connection, scan_id)
 
     async def broadcast_global(self, message: dict[str, Any]):
@@ -54,7 +57,7 @@ class ConnectionManager:
             try:
                 await connection.send_json(message)
             except Exception:
-                pass
+                logger.exception("websocket_broadcast_failed")
 
 
 manager = ConnectionManager()

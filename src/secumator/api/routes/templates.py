@@ -1,7 +1,9 @@
+from typing import Any, Literal
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
-from typing import Any, Literal
-from secumator.core import get_logger, template_manager, ScanTemplate, BUILTIN_TEMPLATES
+
+from secumator.core import BUILTIN_TEMPLATES, ScanTemplate, get_logger, template_manager
 from secumator.models.scan import ScanType
 
 router = APIRouter()

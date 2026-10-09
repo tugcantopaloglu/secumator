@@ -1,35 +1,35 @@
 from .config import settings
+from .correlation import finding_deduplicator, vulnerability_correlator
+from .cvss import CVELookup, CVSSCalculator, cve_lookup, cvss_calculator
 from .logging import get_logger
-from .queue import scan_queue, Priority
-from .validators import validate_target, TargetValidator, ValidationResult
-from .rate_limiter import rate_limiter, RateLimiter, RateLimitConfig
-from .notifications import notification_manager, NotificationEvent, SlackWebhook, DiscordWebhook
-from .cvss import cvss_calculator, cve_lookup, CVSSCalculator, CVELookup
-from .templates import template_manager, ScanTemplate, BUILTIN_TEMPLATES
-from .correlation import vulnerability_correlator, finding_deduplicator
+from .notifications import DiscordWebhook, NotificationEvent, SlackWebhook, notification_manager
+from .queue import Priority, scan_queue
+from .rate_limiter import RateLimitConfig, RateLimiter, rate_limiter
+from .templates import BUILTIN_TEMPLATES, ScanTemplate, template_manager
+from .validators import TargetValidator, ValidationResult, validate_target
 
 __all__ = [
-    "settings",
-    "get_logger",
-    "scan_queue",
+    "BUILTIN_TEMPLATES",
+    "CVELookup",
+    "CVSSCalculator",
+    "DiscordWebhook",
+    "NotificationEvent",
     "Priority",
-    "validate_target",
+    "RateLimitConfig",
+    "RateLimiter",
+    "ScanTemplate",
+    "SlackWebhook",
     "TargetValidator",
     "ValidationResult",
-    "rate_limiter",
-    "RateLimiter",
-    "RateLimitConfig",
-    "notification_manager",
-    "NotificationEvent",
-    "SlackWebhook",
-    "DiscordWebhook",
-    "cvss_calculator",
     "cve_lookup",
-    "CVSSCalculator",
-    "CVELookup",
-    "template_manager",
-    "ScanTemplate",
-    "BUILTIN_TEMPLATES",
-    "vulnerability_correlator",
+    "cvss_calculator",
     "finding_deduplicator",
+    "get_logger",
+    "notification_manager",
+    "rate_limiter",
+    "scan_queue",
+    "settings",
+    "template_manager",
+    "validate_target",
+    "vulnerability_correlator",
 ]

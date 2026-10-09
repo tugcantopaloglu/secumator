@@ -1,9 +1,11 @@
+from typing import Annotated, Any
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+
 from secumator.core import get_logger, settings
 from secumator.core.database import get_db
 from secumator.models.scan import Scan
@@ -131,9 +133,9 @@ Format your response as JSON:
         data = json.loads(result.strip().replace("```json", "").replace("```", ""))
         return VulnerabilityExplanationResponse(**data)
     except Exception as e:
-        logger.error("ai_explain_failed", error=str(e))
+        logger.exception("ai_explain_failed", error=str(e))
         return VulnerabilityExplanationResponse(
-            explanation=f"Unable to generate AI explanation: {str(e)}",
+            explanation=f"Unable to generate AI explanation: {e!s}",
             risk_score=5.0,
             risk_factors=["AI analysis unavailable"],
             business_impact="Manual assessment required",
@@ -183,7 +185,7 @@ Format as JSON:
         data = json.loads(result.strip().replace("```json", "").replace("```", ""))
         return RemediationResponse(**data)
     except Exception as e:
-        logger.error("ai_remediate_failed", error=str(e))
+        logger.exception("ai_remediate_failed", error=str(e))
         return RemediationResponse(
             immediate_actions=["Review affected component immediately"],
             short_term_fixes=["Apply vendor patches if available"],
@@ -236,7 +238,7 @@ Format as JSON:
         data = json.loads(result.strip().replace("```json", "").replace("```", ""))
         return RiskScoringResponse(**data)
     except Exception as e:
-        logger.error("ai_risk_score_failed", error=str(e))
+        logger.exception("ai_risk_score_failed", error=str(e))
         
         severity_weights = {"critical": 10, "high": 7, "medium": 4, "low": 2, "info": 0}
         total = sum(severity_weights.get(f.get("severity", "info"), 0) for f in request.findings)
@@ -262,7 +264,7 @@ Format as JSON:
 
 
 @router.get("/ai/scan/{scan_id}/summary")
-async def get_ai_scan_summary(scan_id: int, db: AsyncSession = Depends(get_db)):
+async def get_ai_scan_summary(scan_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(
         select(Scan).options(selectinload(Scan.findings)).where(Scan.id == scan_id)
     )

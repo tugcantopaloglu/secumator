@@ -1,7 +1,7 @@
 from .base import BaseScanner, ScanResult
-from .nuclei import NucleiScanner
-from .nmap import NmapScanner
-from .nikto import NiktoScanner
 from .engine import ScanEngine
+from .nikto import NiktoScanner
+from .nmap import NmapScanner
+from .nuclei import NucleiScanner
 
-__all__ = ["BaseScanner", "ScanResult", "NucleiScanner", "NmapScanner", "NiktoScanner", "ScanEngine"]
+__all__ = ["BaseScanner", "NiktoScanner", "NmapScanner", "NucleiScanner", "ScanEngine", "ScanResult"]

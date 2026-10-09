@@ -1,3 +1,3 @@
-from . import health, scans, reports, queue, templates, correlation, websocket, github, ai, stats
+from . import ai, correlation, github, health, queue, reports, scans, stats, templates, websocket
 
-__all__ = ["health", "scans", "reports", "queue", "templates", "correlation", "websocket", "github", "ai", "stats"]
+__all__ = ["ai", "correlation", "github", "health", "queue", "reports", "scans", "stats", "templates", "websocket"]

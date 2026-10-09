@@ -1,10 +1,13 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+
 from secumator.core import get_logger, settings
 from secumator.core.database import get_db
 from secumator.models.scan import Scan, ScanStatus
@@ -27,7 +30,7 @@ def get_report_generator() -> ReportGenerator:
 @router.post("/reports", response_model=ReportResponse)
 async def generate_report(
     request: ReportRequest,
-    db: AsyncSession = Depends(get_db),
+    db: Annotated[AsyncSession, Depends(get_db)],
 ) -> ReportResponse:
     result = await db.execute(
         select(Scan).options(selectinload(Scan.findings)).where(Scan.id == request.scan_id)
@@ -57,11 +60,11 @@ async def generate_report(
             format=request.format,
             filename=report_path.name,
             download_url=f"{settings.api_prefix}/reports/download/{report_path.name}",
-            generated_at=datetime.now(timezone.utc),
+            generated_at=datetime.now(UTC),
         )
     except Exception as e:
-        logger.error("report_generation_failed", scan_id=scan.id, error=str(e))
-        raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")
+        logger.exception("report_generation_failed", scan_id=scan.id, error=str(e))
+        raise HTTPException(status_code=500, detail=f"Report generation failed: {e!s}")
 
 
 @router.get("/reports/download/{filename}")
@@ -93,7 +96,8 @@ async def download_report(filename: str):
 async def export_sarif_report(
     scan_id: int,
     download: bool = Query(False, description="Download as file instead of JSON response"),
-    db: AsyncSession = Depends(get_db),
+    *,
+    db: Annotated[AsyncSession, Depends(get_db)],
 ):
     result = await db.execute(
         select(Scan).options(selectinload(Scan.findings)).where(Scan.id == scan_id)
@@ -111,7 +115,7 @@ async def export_sarif_report(
     if download:
         output_dir = Path(settings.report_output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
         output_path = output_dir / f"secumator_report_{scan.id}_{timestamp}.sarif"
         sarif_data = export_sarif(scan, scan.findings, output_path)
         return FileResponse(
